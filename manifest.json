@@ -1,0 +1,16 @@
+{
+    "manifest_version": 2,
+    "name": "Firefox extension in development",
+    "version": "0.1",
+    "description": "Send history of visited pages ...",
+    "background": {
+        "scripts": [
+            "module.js"
+        ]
+    },
+    "permissions": [
+        "history",
+        "notifications",
+        "geolocation"
+    ]
+}
