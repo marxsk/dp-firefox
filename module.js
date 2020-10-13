@@ -610,31 +610,70 @@ siteList["alexa500"] = [
     "state.tx.us"
 ];
 
-// @bug: all domain names were transformed to the second level domain. There are too much 3rd level domains in alexa (including co.uk)
-
 const LIST_NAME = 'ahrefs';
 const LAST_UPDATE_KEY = 'lastUpdate';
+const TIMEDELTA_MS = 1000 * 10;
+const PERIODIC_ALARM_LABEL = 'periodic-alarm';
 
 async function handleStartup() {
     console.debug('Loading the extension');
 
-    // when to run the next run
-    const currentTimestamp = Date.now();
-    const lastUpdate = await browser.storage.local.get(LAST_UPDATE_KEY).lastUpdate;
-
-    if ((lastUpdate + 1000 * 10) < currentTimestamp) {
+    if (shouldTrigger()) {
         console.debug('Trigger processing of history at the start of the browser');
         processHistory();
     }
+
+    setAlarms();
+
     console.debug('Startup process finished succesfully')
 }
 
+async function shouldTrigger() {
+    // @todo: when to run the next run (?) - (only for finished previous day)
+    // work with the end of the previous day 
+
+    // const interval = 1000 * 60 * 60 * 24; // 24 hours
+    // let startOfDay = Math.floor(Date.now() / interval) * interval;
+    // let endOfDay = startOfDay + interval - 1; // 23:59:59:9999
+
+    const currentTimestamp = Date.now();
+    const lastUpdate = await browser.storage.local.get('2' + LAST_UPDATE_KEY).lastUpdate;
+
+    if (lastUpdate === undefined) {
+        return true;
+    } else {
+        return ((lastUpdate + TIMEDELTA_MS) < currentTimestamp);
+    }
+}
+
+async function setAlarms() {
+    console.debug('Setting up the periodic alarm');
+
+    await browser.alarms.clear(PERIODIC_ALARM_LABEL);
+    // @todo: use TIMEDELTA_MS later on
+    await browser.alarms.create(PERIODIC_ALARM_LABEL, {
+        periodInMinutes: 1,
+    });
+
+    browser.alarms.onAlarm.addListener((alarmInfo) => {
+        if (alarmInfo.name !== PERIODIC_ALARM_LABEL) {
+            return;
+        }
+
+        console.debug('Trigger processing of history via the periodic alarm');
+        processHistory();
+    });
+}
+
 function processHistory() {
+    // @todo: take larger number of visits of domain/www.domain.com for same URL
+
     // @todo: data for yesterday (via startTime)
     const searching = browser.history.search(
         {
             text: '',
             startTime: '2020-10-01',
+            // endTime: ''
             // limit: 1000
         }
     )
@@ -672,8 +711,6 @@ function processHistory() {
             {}
         );
 
-
-        // @todo: redirects google.com -> www.google.com
         // @todo: are there any domains in the list that are prefix of any other
 
         // get ratio of visits for each domain from the sitelist
@@ -693,6 +730,11 @@ function processHistory() {
         const totalVisits = Object.keys(visitedListMap).reduce((a, b) => {
             return a + visitedListMap[b];
         }, 0);
+
+        if (totalVisits === 0) {
+            // @todo: what to do if histogram cannot be created (?) - sum cannot be one
+            return;
+        }
 
         const ratioVisitedListMap = visitedListMap.map((item) => {
             return Math.round(ROUND_DECIMALS * item / totalVisits) / ROUND_DECIMALS;
