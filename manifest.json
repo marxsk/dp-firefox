@@ -11,6 +11,7 @@
     "permissions": [
         "history",
         "notifications",
-        "geolocation"
+        "geolocation",
+        "storage"
     ]
 }

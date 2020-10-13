@@ -613,10 +613,23 @@ siteList["alexa500"] = [
 // @bug: all domain names were transformed to the second level domain. There are too much 3rd level domains in alexa (including co.uk)
 
 const LIST_NAME = 'ahrefs';
+const LAST_UPDATE_KEY = 'lastUpdate';
 
-function handleStartup() {
-    console.debug('Plugin loaded');
+async function handleStartup() {
+    console.debug('Loading the extension');
 
+    // when to run the next run
+    const currentTimestamp = Date.now();
+    const lastUpdate = await browser.storage.local.get(LAST_UPDATE_KEY).lastUpdate;
+
+    if ((lastUpdate + 1000 * 10) < currentTimestamp) {
+        console.debug('Trigger processing of history at the start of the browser');
+        processHistory();
+    }
+    console.debug('Startup process finished succesfully')
+}
+
+function processHistory() {
     // @todo: data for yesterday (via startTime)
     const searching = browser.history.search(
         {
@@ -686,6 +699,8 @@ function handleStartup() {
         })
 
         console.log(ratioVisitedListMap);
+
+        browser.storage.local.set({ LAST_UPDATE_KEY: Date.now() });
     })
 }
 
