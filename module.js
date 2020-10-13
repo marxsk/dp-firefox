@@ -615,21 +615,42 @@ siteList["alexa500"] = [
 const LIST_NAME = 'ahrefs';
 
 function handleStartup() {
-    // @todo: data for yesterday (now today)
+    console.debug('Plugin loaded');
+
+    // @todo: data for yesterday (via startTime)
     const searching = browser.history.search(
         {
             text: '',
-            limit: 1000,
+            startTime: '2020-10-01',
+            // limit: 1000
         }
     )
 
     searching.then((history) => {
+        // remove automatic redirection http->https
+        const visitedPagesMap = {};
+        history.map((item) => {
+            const urlPage = item.url.replace(/^.*:\/\//, '');
+            if (!(urlPage in visitedPagesMap)) {
+                visitedPagesMap[urlPage] = item;
+                visitedPagesMap[urlPage].url = urlPage;
+            } else {
+                // if the page is in history with bot http/https take the bigger value
+                // @todo: does visitCount work with global history or filtered one
+                //  if it is global history than we have to count it only once
+                if (visitedPagesMap[urlPage].visitCount < item.visitCount) {
+                    visitedPagesMap[urlPage].visitCount = item.visitCount;
+                }
+            }
+        });
+
         // get domain name from the complete URL
-        const visitedDomainNames = history.map((item) => {
-            return item.url.replace(/^.*:\/\//, '').replace(/\/.*/, '').replace(/(.*\.)?([^.]*\..*$)/, '$2');
+        const visitedDomainNames = Object.keys(visitedPagesMap).map((item) => {
+            return visitedPagesMap[item].url.replace(/\/.*/, '');
         })
 
         // get count of visits for individual domains
+        // @todo: work with visitCount of item (?)
         const visitsPerDomain = visitedDomainNames.reduce(
             (a, b) => {
                 a[b] = typeof (a[b]) !== 'undefined' ? a[b] + 1 : 1;
@@ -638,22 +659,31 @@ function handleStartup() {
             {}
         );
 
-        // sum of all visits
-        // const totalVisits = visitedDomainNames.length;
 
-        // sum of sitelist visits
-        const totalVisits = siteList[LIST_NAME].reduce((a, b) => {
-            return a + ((b in visitsPerDomain) ? visitsPerDomain[b] : 0);
-        }, 0);
+        // @todo: redirects google.com -> www.google.com
+        // @todo: are there any domains in the list that are prefix of any other
 
         // get ratio of visits for each domain from the sitelist
-        const ratioVisitedListMap = siteList[LIST_NAME].map((serverName) => {
-            if (serverName in visitsPerDomain) {
-                return Math.round(ROUND_DECIMALS * visitsPerDomain[serverName] / totalVisits) / ROUND_DECIMALS;
-            } else {
-                return 0;
+        const visitedListMap = siteList[LIST_NAME].map((serverName) => {
+            const validDomains = Object.keys(visitsPerDomain).filter((domain) => {
+                return domain.endsWith(serverName);
+            })
+
+            let visitsPerSite = 0;
+            for (const domain of validDomains) {
+                visitsPerSite += visitsPerDomain[domain];
             }
+
+            return visitsPerSite;
         });
+
+        const totalVisits = Object.keys(visitedListMap).reduce((a, b) => {
+            return a + visitedListMap[b];
+        }, 0);
+
+        const ratioVisitedListMap = visitedListMap.map((item) => {
+            return Math.round(ROUND_DECIMALS * item / totalVisits) / ROUND_DECIMALS;
+        })
 
         console.log(ratioVisitedListMap);
     })
