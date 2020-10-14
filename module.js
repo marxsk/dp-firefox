@@ -683,11 +683,11 @@ function processHistory() {
         const visitedPagesMap = {};
         history.map((item) => {
             const urlPage = item.url.replace(/^.*:\/\//, '');
-            if (!(urlPage in visitedPagesMap)) {
+            if (!(Object.keys(visitedPagesMap)).includes(urlPage)) {
                 visitedPagesMap[urlPage] = item;
                 visitedPagesMap[urlPage].url = urlPage;
             } else {
-                // if the page is in history with bot http/https take the bigger value
+                // if the page is in history with both http/https take the bigger value
                 // @todo: does visitCount work with global history or filtered one
                 //  if it is global history than we have to count it only once
                 if (visitedPagesMap[urlPage].visitCount < item.visitCount) {
@@ -721,7 +721,16 @@ function processHistory() {
 
             let visitsPerSite = 0;
             for (const domain of validDomains) {
-                visitsPerSite += visitsPerDomain[domain];
+                if (validDomains.includes('www.' + domain)) {
+                    visitsPerSite += Math.max(
+                        visitsPerDomain[domain],
+                        visitsPerDomain['www.' + domain]
+                    )
+                } else if (domain.startsWith('www.') && validDomains.includes(domain.substr(4))) {
+                    // This option is already covered, so we will not use this record
+                } else {
+                    visitsPerSite += visitsPerDomain[domain];
+                }
             }
 
             return visitsPerSite;
