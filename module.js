@@ -637,7 +637,7 @@ async function shouldTrigger() {
     // let endOfDay = startOfDay + interval - 1; // 23:59:59:9999
 
     const currentTimestamp = Date.now();
-    const lastUpdate = await browser.storage.local.get('2' + LAST_UPDATE_KEY).lastUpdate;
+    const lastUpdate = await browser.storage.local.get(LAST_UPDATE_KEY).lastUpdate;
 
     if (lastUpdate === undefined) {
         return true;
