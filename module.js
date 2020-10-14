@@ -611,7 +611,6 @@ siteList["alexa500"] = [
 ];
 
 const LIST_NAME = 'ahrefs';
-const LAST_UPDATE_KEY = 'lastUpdate';
 const TIMEDELTA_MS = 1000 * 10;
 const PERIODIC_ALARM_LABEL = 'periodic-alarm';
 // @production: ALARM_PERIOD=60
@@ -631,21 +630,21 @@ async function handleStartup() {
 }
 
 async function shouldTrigger() {
-    // @todo: when to run the next run (?) - (only for finished previous day)
-    // work with the end of the previous day 
-
-    // const interval = 1000 * 60 * 60 * 24; // 24 hours
-    // let startOfDay = Math.floor(Date.now() / interval) * interval;
-    // let endOfDay = startOfDay + interval - 1; // 23:59:59:9999
-
     const currentTimestamp = Date.now();
-    const lastUpdate = await browser.storage.local.get(LAST_UPDATE_KEY).lastUpdate;
+    const localStorage = await browser.storage.local.get("LAST_UPDATE_KEY");
+    const lastUpdate = localStorage['LAST_UPDATE_KEY'];
 
     if (lastUpdate === undefined) {
+        console.debug('Local storage does not contain relevant information');
         return true;
-    } else {
-        return ((lastUpdate + TIMEDELTA_MS) < currentTimestamp);
     }
+
+    // Test if data for yesterday were already sent
+    const dayInterval = 1000 * 60 * 60 * 24
+    const startOfDaySent = Math.floor(lastUpdate / dayInterval) * dayInterval;
+    const startOfYesterday = (Math.floor(currentTimestamp / dayInterval) - 1) * dayInterval;
+
+    return startOfYesterday > startOfDaySent;
 }
 
 async function setAlarms() {
@@ -752,7 +751,7 @@ function processHistory() {
 
         console.log(ratioVisitedListMap);
 
-        browser.storage.local.set({ LAST_UPDATE_KEY: Date.now() });
+        browser.storage.local.set({ "LAST_UPDATE_KEY": Date.now() });
     })
 }
 
