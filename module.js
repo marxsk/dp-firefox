@@ -614,6 +614,8 @@ const LIST_NAME = 'ahrefs';
 const LAST_UPDATE_KEY = 'lastUpdate';
 const TIMEDELTA_MS = 1000 * 10;
 const PERIODIC_ALARM_LABEL = 'periodic-alarm';
+// @production: ALARM_PERIOD=60
+const ALARM_PERIOD = 1;
 
 async function handleStartup() {
     console.debug('Loading the extension');
@@ -650,9 +652,8 @@ async function setAlarms() {
     console.debug('Setting up the periodic alarm');
 
     await browser.alarms.clear(PERIODIC_ALARM_LABEL);
-    // @todo: use TIMEDELTA_MS later on
     await browser.alarms.create(PERIODIC_ALARM_LABEL, {
-        periodInMinutes: 1,
+        periodInMinutes: ALARM_PERIOD,
     });
 
     browser.alarms.onAlarm.addListener((alarmInfo) => {
