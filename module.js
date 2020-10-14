@@ -615,6 +615,7 @@ const TIMEDELTA_MS = 1000 * 10;
 const PERIODIC_ALARM_LABEL = 'periodic-alarm';
 // @production: ALARM_PERIOD=60
 const ALARM_PERIOD = 1;
+const LAST_UPDATE_KEY = 'last_update_key';
 
 async function handleStartup() {
     console.debug('Loading the extension');
@@ -631,8 +632,8 @@ async function handleStartup() {
 
 async function shouldTrigger() {
     const currentTimestamp = Date.now();
-    const localStorage = await browser.storage.local.get("LAST_UPDATE_KEY");
-    const lastUpdate = localStorage['LAST_UPDATE_KEY'];
+    const localStorage = await browser.storage.local.get();
+    const lastUpdate = localStorage[LAST_UPDATE_KEY];
 
     if (lastUpdate === undefined) {
         console.debug('Local storage does not contain relevant information');
@@ -743,7 +744,7 @@ function processHistory() {
 
         console.log(ratioVisitedListMap);
 
-        browser.storage.local.set({ "LAST_UPDATE_KEY": Date.now() });
+        browser.storage.local.set({ [LAST_UPDATE_KEY]: endOfYesterday });
     })
 }
 
