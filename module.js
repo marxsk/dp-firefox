@@ -756,6 +756,5 @@ function processHistory() {
     })
 }
 
-//@note: does not work in debug mode because module is loaded after browser is started
-//browser.runtime.onStartup.addListener(handleStartup);
+browser.runtime.onStartup.addListener(handleStartup);
 browser.runtime.onInstalled.addListener(handleStartup);
