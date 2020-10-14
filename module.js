@@ -669,8 +669,6 @@ async function setAlarms() {
 }
 
 function processHistory() {
-    // @todo: take larger number of visits of domain/www.domain.com for same URL
-
     // @todo: data for yesterday (via startTime)
     const searching = browser.history.search(
         {
