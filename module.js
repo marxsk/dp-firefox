@@ -679,20 +679,13 @@ function processHistory() {
     )
 
     searching.then((history) => {
-        // remove automatic redirection http->https
         const visitedPagesMap = {};
         history.map((item) => {
+            // remove automatic redirection http->https
             const urlPage = item.url.replace(/^.*:\/\//, '');
             if (!(Object.keys(visitedPagesMap)).includes(urlPage)) {
                 visitedPagesMap[urlPage] = item;
                 visitedPagesMap[urlPage].url = urlPage;
-            } else {
-                // if the page is in history with both http/https take the bigger value
-                // @todo: does visitCount work with global history or filtered one
-                //  if it is global history than we have to count it only once
-                if (visitedPagesMap[urlPage].visitCount < item.visitCount) {
-                    visitedPagesMap[urlPage].visitCount = item.visitCount;
-                }
             }
         });
 
@@ -702,7 +695,6 @@ function processHistory() {
         })
 
         // get count of visits for individual domains
-        // @todo: work with visitCount of item (?)
         const visitsPerDomain = visitedDomainNames.reduce(
             (a, b) => {
                 a[b] = typeof (a[b]) !== 'undefined' ? a[b] + 1 : 1;
