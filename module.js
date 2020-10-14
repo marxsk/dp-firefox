@@ -704,13 +704,11 @@ function processHistory() {
             {}
         );
 
-        // @todo: are there any domains in the list that are prefix of any other
-
         // get ratio of visits for each domain from the sitelist
         const visitedListMap = siteList[LIST_NAME].map((serverName) => {
             const validDomains = Object.keys(visitsPerDomain).filter((domain) => {
-                return domain.endsWith(serverName);
-            })
+                return ((domain === serverName) || (domain.endsWith('.' + serverName)));
+            });
 
             let visitsPerSite = 0;
             for (const domain of validDomains) {
