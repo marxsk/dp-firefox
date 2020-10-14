@@ -662,7 +662,9 @@ async function setAlarms() {
         }
 
         console.debug('Trigger processing of history via the periodic alarm');
-        processHistory();
+        if (shouldTrigger()) {
+            processHistory();
+        }
     });
 }
 
