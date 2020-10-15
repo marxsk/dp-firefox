@@ -617,21 +617,22 @@ const LAST_UPDATE_KEY = 'last_update_key';
 let ALARM_PERIOD = 60;
 let DAY_INTERVAL = 1000 * 60 * 60 * 24;
 
-const DEBUG = true;
+const DEBUG = false;
 
 if (DEBUG) {
     ALARM_PERIOD = 1;               // 1 minute
     DAY_INTERVAL = 1000 * 60 * 5;   // 5 minutes
 }
 
+/**
+ *  Initialization of the browser extension
+ */
 async function handleStartup() {
     console.debug('Loading the extension');
 
     setAlarms();
 
-    const shouldRun = await shouldTrigger();
-
-    if (shouldRun === true) {
+    if (await shouldTrigger() === true) {
         console.debug('Trigger processing of history at the start of the browser');
         processHistory();
     }
@@ -639,22 +640,37 @@ async function handleStartup() {
     console.debug('Startup process finished succesfully')
 }
 
+/**
+ *  Test if we should send a data for yesterday.
+ * 
+ *  If it is not possible to determine if data were sent, just attempt to send them again.
+ * 
+ *  @return {boolean} true - data should be sent
+ */
 async function shouldTrigger() {
-    const currentTimestamp = Date.now();
-    const localStorage = await browser.storage.local.get();
-    const lastUpdate = localStorage[LAST_UPDATE_KEY];
-
-    if (lastUpdate === undefined) {
+    if (await browser.storage.local.get()[LAST_UPDATE_KEY] === undefined) {
         console.debug('Local storage does not contain relevant information');
         return true;
     }
 
-    // Test if data for yesterday were already sent
-    const endOfYesterday = Math.floor(currentTimestamp / DAY_INTERVAL) * DAY_INTERVAL - 1;
-
-    return lastUpdate < endOfYesterday;
+    return lastUpdate < (Math.floor(Date.now() / DAY_INTERVAL) * DAY_INTERVAL - 1);
 }
 
+/**
+ *  Setup periodic alarm that can process history
+ * 
+ *  We have to send data once a day, so the best time will be just after midnight. Problem is
+ *  that at that time people usually have their computer:
+ *    - turned off -> data will be send when browser is starting
+ *    - sleep mode -> the alarm cannot be triggered. So we need to run trigger function more often
+ *           than really necessary. 
+ * 
+ *  The ideal solution will be to set alarm to 00:01 (beware of server-side high-load) and if it is not triggered
+ *  do it periodically. This implementation runs alarm every ALARM_PERIOD minutes and it just check if data were sent.
+ *  So overhead is mininal.
+ * 
+ *  @todo Test real impact on hibernate on alarms (documentation not available)
+ */
 async function setAlarms() {
     console.debug('Setting up the periodic alarm');
 
@@ -669,13 +685,26 @@ async function setAlarms() {
         }
 
         console.debug('Trigger processing of history via the periodic alarm');
-        const shouldRun = await shouldTrigger();
-        if (shouldTrigger === true) {
+        if (await shouldTrigger === true) {
             processHistory();
         }
     });
 }
 
+/**
+ *  Process history and prepare data to be send to servers
+ *
+ *  @returns Histogram of servers in the predefined list and their visits
+ * 
+ *  We will obtain history for last (finished) day and for each item we will do deduplication.
+ *  The deduplication consist of:
+ *     - removing same URL that differs only in http/https
+ *     - merging (www.foo.com + foo.com) into one entry that has higher number of different visit counts
+ * 
+ *  Be aware that we are counting items in the history, not the number of real visits. Such number is not available for
+ *  time interval. It is possible to get this number but we will have to store more information in the storage. It is
+ *  technically possible but it might have impact on anonymity of the user.
+ */
 function processHistory() {
     console.debug('Processing the history');
 
