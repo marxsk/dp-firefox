@@ -620,12 +620,14 @@ const LAST_UPDATE_KEY = 'last_update_key';
 async function handleStartup() {
     console.debug('Loading the extension');
 
-    if (shouldTrigger()) {
+    setAlarms();
+
+    const shouldRun = await shouldTrigger();
+
+    if (shouldRun === true) {
         console.debug('Trigger processing of history at the start of the browser');
         processHistory();
     }
-
-    setAlarms();
 
     console.debug('Startup process finished succesfully')
 }
@@ -656,13 +658,14 @@ async function setAlarms() {
         periodInMinutes: ALARM_PERIOD,
     });
 
-    browser.alarms.onAlarm.addListener((alarmInfo) => {
+    browser.alarms.onAlarm.addListener(async (alarmInfo) => {
         if (alarmInfo.name !== PERIODIC_ALARM_LABEL) {
             return;
         }
 
         console.debug('Trigger processing of history via the periodic alarm');
-        if (shouldTrigger()) {
+        const shouldRun = await shouldTrigger();
+        if (shouldTrigger === true) {
             processHistory();
         }
     });
