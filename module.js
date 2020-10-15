@@ -611,11 +611,18 @@ siteList["alexa500"] = [
 ];
 
 const LIST_NAME = 'ahrefs';
-const TIMEDELTA_MS = 1000 * 10;
 const PERIODIC_ALARM_LABEL = 'periodic-alarm';
-// @production: ALARM_PERIOD=60
-const ALARM_PERIOD = 1;
 const LAST_UPDATE_KEY = 'last_update_key';
+
+let ALARM_PERIOD = 60;
+let DAY_INTERVAL = 1000 * 60 * 60 * 24;
+
+const DEBUG = true;
+
+if (DEBUG) {
+    ALARM_PERIOD = 1;               // 1 minute
+    DAY_INTERVAL = 1000 * 60 * 5;   // 5 minutes
+}
 
 async function handleStartup() {
     console.debug('Loading the extension');
@@ -643,11 +650,9 @@ async function shouldTrigger() {
     }
 
     // Test if data for yesterday were already sent
-    const dayInterval = 1000 * 60 * 60 * 24
-    const startOfDaySent = Math.floor(lastUpdate / dayInterval) * dayInterval;
-    const startOfYesterday = (Math.floor(currentTimestamp / dayInterval) - 1) * dayInterval;
+    const endOfYesterday = Math.floor(currentTimestamp / DAY_INTERVAL) * DAY_INTERVAL - 1;
 
-    return startOfYesterday > startOfDaySent;
+    return lastUpdate < endOfYesterday;
 }
 
 async function setAlarms() {
@@ -672,13 +677,17 @@ async function setAlarms() {
 }
 
 function processHistory() {
-    // @todo: data for yesterday (via startTime)
+    console.debug('Processing the history');
+
+    const currentTimestamp = Date.now();
+    const startOfYesterday = (Math.floor(currentTimestamp / DAY_INTERVAL) - 1) * DAY_INTERVAL;
+    const endOfYesterday = Math.floor(currentTimestamp / DAY_INTERVAL) * DAY_INTERVAL - 1;
+
     const searching = browser.history.search(
         {
             text: '',
-            startTime: '2020-10-01',
-            // endTime: ''
-            // limit: 1000
+            startTime: startOfYesterday,
+            endTime: endOfYesterday
         }
     )
 
