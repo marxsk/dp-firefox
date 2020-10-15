@@ -692,6 +692,8 @@ function processHistory() {
     )
 
     searching.then((history) => {
+        console.debug(history);
+
         const visitedPagesMap = {};
         history.map((item) => {
             // remove automatic redirection http->https
@@ -745,14 +747,14 @@ function processHistory() {
 
         if (totalVisits === 0) {
             // @todo: what to do if histogram cannot be created (?) - sum cannot be one
-            return;
+            console.debug('There are no sites that were visited');
+        } else {
+            const ratioVisitedListMap = visitedListMap.map((item) => {
+                return Math.round(ROUND_DECIMALS * item / totalVisits) / ROUND_DECIMALS;
+            })
+
+            console.debug(ratioVisitedListMap);
         }
-
-        const ratioVisitedListMap = visitedListMap.map((item) => {
-            return Math.round(ROUND_DECIMALS * item / totalVisits) / ROUND_DECIMALS;
-        })
-
-        console.log(ratioVisitedListMap);
 
         browser.storage.local.set({ [LAST_UPDATE_KEY]: endOfYesterday });
     })
