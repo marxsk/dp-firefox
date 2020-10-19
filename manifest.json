@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Extension in development",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Send history of visited pages ...",
     "background": {
         "scripts": [

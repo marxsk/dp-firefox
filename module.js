@@ -617,7 +617,7 @@ const LAST_UPDATE_KEY = 'last_update_key';
 let ALARM_PERIOD = 60;
 let DAY_INTERVAL = 1000 * 60 * 60 * 24;
 
-const DEBUG = false;
+const DEBUG = true;
 
 if (DEBUG) {
     ALARM_PERIOD = 1;               // 1 minute
@@ -628,16 +628,17 @@ if (DEBUG) {
  *  Initialization of the browser extension
  */
 async function handleStartup() {
-    console.debug('Loading the extension');
+    console.log('Loading the extension');
 
     setAlarms();
 
-    if (await shouldTrigger() === true) {
-        console.debug('Trigger processing of history at the start of the browser');
+    const trigger = await shouldTrigger();
+    if (trigger === true) {
+        console.log('Trigger processing of history at the start of the browser');
         processHistory();
     }
 
-    console.debug('Startup process finished succesfully')
+    console.log('Startup process finished succesfully')
 }
 
 /**
@@ -648,8 +649,9 @@ async function handleStartup() {
  *  @return {boolean} true - data should be sent
  */
 async function shouldTrigger() {
-    if (await browser.storage.local.get()[LAST_UPDATE_KEY] === undefined) {
-        console.debug('Local storage does not contain relevant information');
+    const localStorage = await browser.storage.local.get();
+    if (localStorage[LAST_UPDATE_KEY] === undefined) {
+        console.log('Local storage does not contain relevant information');
         return true;
     }
 
@@ -672,7 +674,7 @@ async function shouldTrigger() {
  *  @todo Test real impact on hibernate on alarms (documentation not available)
  */
 async function setAlarms() {
-    console.debug('Setting up the periodic alarm');
+    console.log('Setting up the periodic alarm');
 
     await browser.alarms.clear(PERIODIC_ALARM_LABEL);
     await browser.alarms.create(PERIODIC_ALARM_LABEL, {
@@ -684,8 +686,10 @@ async function setAlarms() {
             return;
         }
 
-        console.debug('Trigger processing of history via the periodic alarm');
-        if (await shouldTrigger === true) {
+        console.log('Trigger processing of history via the periodic alarm');
+        const trigger = await shouldTrigger();
+
+        if (trigger === true) {
             processHistory();
         }
     });
@@ -706,7 +710,7 @@ async function setAlarms() {
  *  technically possible but it might have impact on anonymity of the user.
  */
 function processHistory() {
-    console.debug('Processing the history');
+    console.log('Processing the history');
 
     const currentTimestamp = Date.now();
     const startOfYesterday = (Math.floor(currentTimestamp / DAY_INTERVAL) - 1) * DAY_INTERVAL;
@@ -721,7 +725,7 @@ function processHistory() {
     )
 
     searching.then((history) => {
-        console.debug(history);
+        console.log(history);
 
         const visitedPagesMap = {};
         history.map((item) => {
@@ -776,13 +780,13 @@ function processHistory() {
 
         if (totalVisits === 0) {
             // @todo: what to do if histogram cannot be created (?) - sum cannot be one
-            console.debug('There are no sites that were visited');
+            console.log('There are no sites that were visited');
         } else {
             const ratioVisitedListMap = visitedListMap.map((item) => {
                 return Math.round(ROUND_DECIMALS * item / totalVisits) / ROUND_DECIMALS;
             })
 
-            console.debug(ratioVisitedListMap);
+            console.log(ratioVisitedListMap);
         }
 
         browser.storage.local.set({ [LAST_UPDATE_KEY]: endOfYesterday });
