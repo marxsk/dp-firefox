@@ -655,7 +655,7 @@ async function shouldTrigger() {
         return true;
     }
 
-    return lastUpdate < (Math.floor(Date.now() / DAY_INTERVAL) * DAY_INTERVAL - 1);
+    return localStorage[LAST_UPDATE_KEY] < (Math.floor(Date.now() / DAY_INTERVAL) * DAY_INTERVAL - 1);
 }
 
 /**
