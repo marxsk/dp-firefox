@@ -646,6 +646,7 @@ async function handleStartup() {
  *  Test if we should send a data for yesterday.
  * 
  *  If it is not possible to determine if data were sent, just attempt to send them again.
+ *  We use time-shifting so the trigger works in the local time, not it the UTC
  * 
  *  @return {boolean} true - data should be sent
  */
@@ -656,7 +657,8 @@ async function shouldTrigger() {
         return true;
     }
 
-    return localStorage[LAST_UPDATE_KEY] < (Math.floor(Date.now() / DAY_INTERVAL) * DAY_INTERVAL - 1);
+    const TIME_ZONE_OFFSET = new Date().getTimezoneOffset() * 60 * 1000;
+    return localStorage[LAST_UPDATE_KEY] < (Math.floor((Date.now() + TIME_ZONE_OFFSET) / DAY_INTERVAL) * DAY_INTERVAL - 1);
 }
 
 /**
@@ -714,8 +716,9 @@ function processHistory() {
     console.log('Processing the history');
 
     const currentTimestamp = Date.now();
-    const startOfYesterday = (Math.floor(currentTimestamp / DAY_INTERVAL) - 1) * DAY_INTERVAL;
-    const endOfYesterday = Math.floor(currentTimestamp / DAY_INTERVAL) * DAY_INTERVAL - 1;
+    const TIME_ZONE_OFFSET = currentTimestamp.getTimezoneOffset() * 60 * 1000;
+    const startOfYesterday = (Math.floor((currentTimestamp + TIME_ZONE_OFFSET) / DAY_INTERVAL) - 1) * DAY_INTERVAL;
+    const endOfYesterday = Math.floor((currentTimestamp + TIME_ZONE_OFFSET) / DAY_INTERVAL) * DAY_INTERVAL - 1;
 
     const searching = browser.history.search(
         {
