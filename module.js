@@ -613,6 +613,7 @@ siteList["alexa500"] = [
 const LIST_NAME = 'ahrefs';
 const PERIODIC_ALARM_LABEL = 'periodic-alarm';
 const LAST_UPDATE_KEY = 'last_update_key';
+const USE_OTHER_SITES = true;
 
 let ALARM_PERIOD = 60;
 let DAY_INTERVAL = 1000 * 60 * 60 * 24;
@@ -764,19 +765,29 @@ function processHistory() {
                         visitsPerDomain[domain],
                         visitsPerDomain['www.' + domain]
                     )
+                    visitsPerDomain[domain] = 0;
+                    visitsPerDomain['www.' + domain] = 0;
                 } else if (domain.startsWith('www.') && validDomains.includes(domain.substr(4))) {
                     // This option is already covered, so we will not use this record
                 } else {
                     visitsPerSite += visitsPerDomain[domain];
+                    visitsPerDomain[domain] = 0;
                 }
             }
 
             return visitsPerSite;
         });
 
-        const totalVisits = Object.keys(visitedListMap).reduce((a, b) => {
+        // Count all other sites that were not yet processed (what is reason why we set it to 0 in the previous block)
+        const otherVisits = Object.keys(visitsPerDomain).reduce((sum, key) => sum + visitsPerDomain[key], 0);
+
+        let totalVisits = Object.keys(visitedListMap).reduce((a, b) => {
             return a + visitedListMap[b];
         }, 0);
+
+        if (USE_OTHER_SITES === true) {
+            totalVisits += otherVisits;
+        }
 
         if (totalVisits === 0) {
             // @todo: what to do if histogram cannot be created (?) - sum cannot be one
@@ -786,6 +797,9 @@ function processHistory() {
                 return Math.round(ROUND_DECIMALS * item / totalVisits) / ROUND_DECIMALS;
             })
 
+            if (USE_OTHER_SITES) {
+                ratioVisitedListMap.push(Math.round(ROUND_DECIMALS * otherVisits / totalVisits) / ROUND_DECIMALS);
+            }
             console.log(ratioVisitedListMap);
         }
 
