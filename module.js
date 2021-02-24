@@ -715,16 +715,20 @@ async function setAlarms() {
 function processHistory() {
     console.log('Processing the history');
 
-    const currentTimestamp = Date.now();
-    const TIME_ZONE_OFFSET = currentTimestamp.getTimezoneOffset() * 60 * 1000;
-    const startOfYesterday = (Math.floor((currentTimestamp + TIME_ZONE_OFFSET) / DAY_INTERVAL) - 1) * DAY_INTERVAL;
-    const endOfYesterday = Math.floor((currentTimestamp + TIME_ZONE_OFFSET) / DAY_INTERVAL) * DAY_INTERVAL - 1;
+    const currentTime = new Date();
+    const currentTimestamp = currentTime.getTime();
+    const TIME_ZONE_OFFSET = currentTime.getTimezoneOffset() * 60 * 1000;
+    const startOfYesterdayUTC = (Math.floor((currentTimestamp + TIME_ZONE_OFFSET) / DAY_INTERVAL) - 1) * DAY_INTERVAL;
+    // local time when yesterday UTC has started
+    const startOfYesterdayLocal = startOfYesterdayUTC - TIME_ZONE_OFFSET;
+    const endOfYesterdayLocal = startOfYesterdayLocal + DAY_INTERVAL - 1;
 
+    // startTime and endTime are in local time
     const searching = browser.history.search(
         {
             text: '',
-            startTime: startOfYesterday,
-            endTime: endOfYesterday
+            startTime: startOfYesterdayLocal,
+            endTime: endOfYesterdayLocal
         }
     )
 
@@ -804,6 +808,7 @@ function processHistory() {
                 ratioVisitedListMap.push(Math.round(ROUND_DECIMALS * otherVisits / totalVisits) / ROUND_DECIMALS);
             }
 
+            console.log(`Window: ${startOfYesterdayLocal} - ${endOfYesterdayLocal}`);
             console.log(ratioVisitedListMap);
             // @note: set-up CORS on the server-side https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSMissingAllowOrigin
             fetch('http://localhost:8000/favicon.ico').then(x => {
@@ -811,7 +816,7 @@ function processHistory() {
             })
         }
 
-        browser.storage.local.set({ [LAST_UPDATE_KEY]: endOfYesterday });
+        browser.storage.local.set({ [LAST_UPDATE_KEY]: endOfYesterdayLocal });
     })
 }
 
