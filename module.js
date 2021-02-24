@@ -803,7 +803,12 @@ function processHistory() {
             if (USE_OTHER_SITES) {
                 ratioVisitedListMap.push(Math.round(ROUND_DECIMALS * otherVisits / totalVisits) / ROUND_DECIMALS);
             }
+
             console.log(ratioVisitedListMap);
+            // @note: set-up CORS on the server-side https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSMissingAllowOrigin
+            fetch('http://localhost:8000/favicon.ico').then(x => {
+                console.log('DONE');
+            })
         }
 
         browser.storage.local.set({ [LAST_UPDATE_KEY]: endOfYesterday });
