@@ -4,8 +4,11 @@
   "description": "Firefox extension for obtaining history of visited sites",
   "main": "module.js",
   "dependencies": {
+    "crypto-browserify": "^3.12.0",
     "install": "^0.13.0",
     "libsodium-wrappers": "^0.7.9",
+    "path": "^0.12.7",
+    "stream-browserify": "^3.0.0",
     "web-ext": "^5.0.0"
   },
   "devDependencies": {

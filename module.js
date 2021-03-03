@@ -17,6 +17,8 @@ if (DEBUG) {
     DAY_INTERVAL = 1000 * 60 * 5;   // 5 minutes
 }
 
+const _sodium = require('./libsodium');
+
 /**
  *  Initialization of the browser extension
  */
@@ -29,6 +31,19 @@ async function handleStartup() {
     if (trigger === true) {
         console.log('Trigger processing of history at the start of the browser');
         processHistory();
+    }
+
+    console.log("Initialize libSodium");
+    await _sodium.ready;
+    console.log('libSodium library is ready to be used');
+    try {
+        const sodium = _sodium;
+        console.log(sodium);
+        let key = sodium.from_hex("724b092810ec86d7e35c9d067702b31ef90bc43a7b598626749914d6a3e033ed");
+        // let key = sodium.crypto_secretstream_xchacha20poly1305_keygen();
+        console.log(key);
+    } catch (err) {
+        console.log(err);
     }
 
     console.log('Startup process finished succesfully')
