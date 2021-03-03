@@ -1,0 +1,31 @@
+{
+  "name": "dp-firefox",
+  "version": "0.6.0",
+  "description": "Firefox extension for obtaining history of visited sites",
+  "main": "module.js",
+  "dependencies": {
+    "install": "^0.13.0",
+    "libsodium-wrappers": "^0.7.9",
+    "web-ext": "^5.0.0"
+  },
+  "devDependencies": {
+    "@ianwalter/web-ext-webpack-plugin": "^0.1.0",
+    "webpack": "^5.24.2",
+    "webpack-cli": "^4.5.0"
+  },
+  "scripts": {
+    "prepare": "./node_modules/.bin/webpack",
+    "start": "./node_modules/.bin/webpack -w",
+    "prepack": "./node_modules/.bin/web-ext build --overwrite-dest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marxsk/dp-firefox.git"
+  },
+  "author": "mgrac@redhat.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/marxsk/dp-firefox/issues"
+  },
+  "homepage": "https://github.com/marxsk/dp-firefox#readme"
+}
