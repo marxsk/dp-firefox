@@ -17,7 +17,7 @@ if (DEBUG) {
     DAY_INTERVAL = 1000 * 60 * 5;   // 5 minutes
 }
 
-const _sodium = require('./libsodium');
+const _sodium = require('libsodium-wrappers');
 
 /**
  *  Initialization of the browser extension
