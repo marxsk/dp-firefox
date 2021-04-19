@@ -38,10 +38,21 @@ async function handleStartup() {
     console.log('libSodium library is ready to be used');
     try {
         const sodium = _sodium;
-        console.log(sodium);
         let key = sodium.from_hex("724b092810ec86d7e35c9d067702b31ef90bc43a7b598626749914d6a3e033ed");
         // let key = sodium.crypto_secretstream_xchacha20poly1305_keygen();
+        console.log('KEY2');
         console.log(key);
+
+        const keyPair = sodium.crypto_box_keypair();
+        const publicKey = keyPair.publicKey;
+        const privateKey = keyPair.privateKey;
+
+        console.log(`${sodium.crypto_box_seal}`);
+        console.log(`${sodium.crypto_box_seal_open}`);
+        const m = 'message1';
+        const mb = sodium.from_string(m);
+        console.log('MESSG');
+        console.log(mb);
     } catch (err) {
         console.log(err);
     }
